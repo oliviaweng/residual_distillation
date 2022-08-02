@@ -27,7 +27,7 @@ CUDA_VISIBLE_DEVICES=0 python3 ${code_dir}/train_dirac.py --stage RES_NMT \
                        --data_dir ${data_dir} \
                        --seed ${seed} \
                        --learning_rate 0.2 \
-                       --batch_size 1 \
+                       --batch_size 512 \
                        --aim ${aim} \
                        --start_epoch 0 \
                        --alpha 0.9 \

@@ -14,7 +14,7 @@ import torchvision.transforms as transforms
 import torchvision.datasets   as datasets
 import torchvision.models     as models
 import os, pickle, sys, time, torch, argparse, pdb, math
-
+from torch.utils.tensorboard import SummaryWriter
 
 parser = argparse.ArgumentParser("IMAGENET")
 parser.add_argument('--save_dir'         ,   type = str,      default = "./result")
@@ -48,6 +48,8 @@ parser.add_argument('--stone'            , type=int, nargs='+', default=[100, 15
 parser.add_argument('--config_s'          ,   type = str,                          )
 parser.add_argument('--config_t'          ,   type = str,                          )
 parser.add_argument('--dc'                ,   type = float,                          )
+parser.add_argument('--experiment_name', type=str, default="experiment")
+
 
 args   = parser.parse_args()
 logger = prepare_logger(args)
@@ -86,6 +88,8 @@ bc_dict = {
 
 
 def trainer(train_loader, valid_loader, model, criterion,  optimizer_t, optimizer_s=None, lr_scheduler=None, stage=None):
+    # Init Tensorboard writer
+    writer = SummaryWriter(os.path.join(args.save_dir, 'runs', args.experiment_name))
     logger.log("start training..." + stage)
     best_top1  = 0.0
     epochs     = args.baseline_epochs
@@ -120,10 +124,10 @@ def trainer(train_loader, valid_loader, model, criterion,  optimizer_t, optimize
         need_time = '[Need: {:02d}:{:02d}:{:02d}]'.format(need_hour, need_mins, need_secs)
         logger.log(' [{:s}] :: {:3d}/{:3d} ----- [{:s}] {:s} LR={:}'.format(
             args.smodel_name, epoch, epochs, time_string(), need_time, lr))
-        train(train_loader, model, criterion, optimizer_t, optimizer_s, epoch, stage, logger, args)
+        train(train_loader, model, criterion, optimizer_t, optimizer_s, epoch, stage, logger, writer, args)
         global_step = (epoch + 1) * len(train_loader) - 1
         valid_top1 = valid(valid_loader, model, criterion, epoch,
-                           global_step, stage=stage, logger=logger, args=args)
+                           global_step, stage=stage, logger=logger, tboard_writer=writer, args=args)
         
         if epoch == 0 or best_top1 < valid_top1:
             best_top1 = valid_top1
@@ -131,7 +135,7 @@ def trainer(train_loader, valid_loader, model, criterion,  optimizer_t, optimize
         else:
             is_best = False
             
-        if epoch >= 89:
+        if epoch % 5 == 0: # Checkpoint every 5 epochs
             utils.save_checkpoint(model, logger.path('info'), 
                                   is_best=is_best, pre = args.aim + "_" + "epoch_" + str(epoch) + "_" + stage)
   
@@ -140,6 +144,7 @@ def trainer(train_loader, valid_loader, model, criterion,  optimizer_t, optimize
            
 
     logger.log("Final best valid Prec@1: {:.4%}".format(best_top1))
+    writer.close()
 
     
 def train_nmt(train_loader, valid_loader, model, criterion, stage):

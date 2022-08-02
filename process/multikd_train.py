@@ -18,7 +18,7 @@ def Cosine(min_v, max_v, epoch, epoch_max):
         res = min_v
     return res
 
-def train(data_loader, model, criterion, optimizer_t, optimizer_s, epoch, stage, logger, args):
+def train(data_loader, model, criterion, optimizer_t, optimizer_s, epoch, stage, logger, tboard_writer, args):
     
     [loss_avg, mse_avg, top1_cnn, top5_cnn, top1_res, top5_res] = [utils.AverageMeter() for _ in range(6)]
     global_step = epoch * len(data_loader)
@@ -228,7 +228,7 @@ def train(data_loader, model, criterion, optimizer_t, optimizer_s, epoch, stage,
             loss_avg.update(loss.detach().data.item(), num_samples)
             
         else:
-            raise NameError("invalide stage nanme") 
+            raise NameError("invalid stage name") 
             
 
         
@@ -246,7 +246,7 @@ def train(data_loader, model, criterion, optimizer_t, optimizer_s, epoch, stage,
 
 
 
-def valid(data_loader, model, criterion, epoch, global_step, stage, logger, args):
+def valid(data_loader, model, criterion, epoch, global_step, stage, logger, tboard_writer, args):
 
     loss_avg   = utils.AverageMeter()
     top1_cnn   = utils.AverageMeter()
@@ -304,7 +304,7 @@ def valid(data_loader, model, criterion, epoch, global_step, stage, logger, args
                 top5_res.update(prec5_res.item(), num_samples)
                 loss_avg.update(loss.detach().data.item(), num_samples)
             else:
-                raise NameError("invalide stage nanme") 
+                raise NameError("invalid stage name") 
     
             epochs = args.baseline_epochs
             if step % 100 == 0 or step == len(data_loader) - 1:

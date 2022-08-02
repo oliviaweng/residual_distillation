@@ -26,6 +26,7 @@ def save_checkpoint(model, save_dir, epoch=None, is_best=False, pre = None):
         ckpt = os.path.join(save_dir, "{}_checkpoint_{}.pth.tar".format(pre, epoch))
     else:
         ckpt = os.path.join(save_dir, "{}_checkpoint.pth.tar".format(pre))
+    # TODO: Save optimizer state too
     torch.save({
             'epoch': epoch,
             'model_state_dict': model.state_dict(),
