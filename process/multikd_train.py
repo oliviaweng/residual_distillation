@@ -240,6 +240,7 @@ def train(data_loader, model, criterion, optimizer_t, optimizer_s, epoch, stage,
                             loss_avg.avg, mse_avg.avg, top1_cnn.avg, top1_res.avg, top5_cnn.avg, top5_res.avg))
             tboard_writer.add_scalar("Train/Top-1 Accuracy vs Step", top1_res.avg, global_step)
             tboard_writer.add_scalar("Train/Top-5 Accuracy vs Step", top5_res.avg, global_step)
+            tboard_writer.add_scalar("Train/Loss vs Step", loss_avg.avg, global_step)
             
         global_step += 1
         # Log which step we are at 
@@ -249,6 +250,7 @@ def train(data_loader, model, criterion, optimizer_t, optimizer_s, epoch, stage,
                 epoch, epochs, top1_cnn.avg, top1_res.avg, top5_cnn.avg, top5_res.avg, loss_avg.avg))
     tboard_writer.add_scalar("Train/Top-1 Accuracy vs Epoch", top1_res.avg, epoch)
     tboard_writer.add_scalar("Train/Top-5 Accuracy vs Epoch", top5_res.avg, epoch)
+    tboard_writer.add_scalar("Train/Loss vs Epoch", loss_avg.avg, epoch)
     return loss_avg.avg
 
 
@@ -327,6 +329,7 @@ def valid(data_loader, model, criterion, epoch, global_step, stage, logger, tboa
         
         tboard_writer.add_scalar("Valid/Top-1 Accuracy vs Epoch", top1_res.avg, epoch)
         tboard_writer.add_scalar("Valid/Top-5 Accuracy vs Epoch", top5_res.avg, epoch)
+        tboard_writer.add_scalar("Valid/Loss vs Epoch", loss_avg.avg, epoch)
         if "RES" in stage:
             return top1_res.avg
         else:
