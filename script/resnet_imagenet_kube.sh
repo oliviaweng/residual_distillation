@@ -2,6 +2,7 @@
 
 layer=$1
 en=$2
+batch_size=$3 
 dc=0.0
 procedure=RES_NMT
 wd=1e-4
@@ -29,7 +30,7 @@ CUDA_VISIBLE_DEVICES=0 python3 ${code_dir}/train_dirac.py --stage RES_NMT \
                        --data_dir ${data_dir} \
                        --seed ${seed} \
                        --learning_rate 0.2 \
-                       --batch_size 512 \
+                       --batch_size ${batch_size} \
                        --aim ${aim} \
                        --start_epoch 0 \
                        --alpha 0.9 \
