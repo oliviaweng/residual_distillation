@@ -119,6 +119,12 @@ def prepare_logger(xargs):
     logger.log("cuDNN   Version  : {:}".format(torch.backends.cudnn.version()))
     logger.log("CUDA available   : {:}".format(torch.cuda.is_available()))
     logger.log("CUDA GPU numbers : {:}".format(torch.cuda.device_count()))
+    # Set CUDA_VISIBLE DEVICSE to number of available GPUs
+    cuda_visible_devices = []
+    for i in range(torch.cuda.device_count()):
+        cuda_visible_devices.append(i)
+    cuda_visible_devices_str = ','.join(map(str, cuda_visible_devices))
+    os.environ['CUDA_VISIBLE_DEVICES'] = cuda_visible_devices_str
     logger.log("CUDA_VISIBLE_DEVICES : {:}".format(os.environ['CUDA_VISIBLE_DEVICES'] if 'CUDA_VISIBLE_DEVICES' in os.environ else 'None'))
     return logger
 
