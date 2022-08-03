@@ -9,7 +9,7 @@ wd=1e-4
 dataset=imagenet
 tmodel_name=resnet${1}_imagenet
 smodel_name=resnet${1}_imagenet_diraconv
-aim=${tmodel_name}_${layer}_${procedure}_2gpu
+aim=${tmodel_name}_${layer}_${procedure}_${en}
 echo "teacher_name:"${tmodel_name}
 echo "student_name:"${smodel_name}
 code_dir=/imagenet-volume/pytorch/python/src/residual_distillation
