@@ -19,7 +19,7 @@ data_dir=/imagenet-volume/ILSVRC/Data/CLS-LOC/
 mode_dir=""
 seed=1
 
-CUDA_VISIBLE_DEVICES=0 python3 ${code_dir}/train_dirac.py --stage RES_NMT \
+python3 ${code_dir}/train_dirac.py --stage RES_NMT \
                        --baseline_epochs 120 \
                        --cutout_length 0 \
                        --procedure ${procedure} \
