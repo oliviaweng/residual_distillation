@@ -31,7 +31,8 @@ class Logger(object):
         elif mode == 'best' : return self.model_dir / 'seed-{:}-best.pth'.format(self.seed)
         elif mode == 'info' : return self.log_dir
         elif mode == 'log'  : return self.log_dir
-        else: raise TypeError('Unknow mode = {:}, valid modes = {:}'.format(mode, valids))
+        elif mode == 'ckpt' : return self.model_dir
+        else: raise TypeError('Unknown mode = {:}, valid modes = {:}'.format(mode, valids))
 
     def extract_log(self):
         return self.logger_file

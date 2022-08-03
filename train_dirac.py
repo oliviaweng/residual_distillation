@@ -48,6 +48,7 @@ parser.add_argument('--stone'            , type=int, nargs='+', default=[100, 15
 parser.add_argument('--config_s'          ,   type = str,                          )
 parser.add_argument('--config_t'          ,   type = str,                          )
 parser.add_argument('--dc'                ,   type = float,                          )
+parser.add_argument('--tboard_dir', type=str, default="/var/log")
 parser.add_argument('--experiment_name', type=str, default="experiment")
 
 
@@ -89,7 +90,7 @@ bc_dict = {
 
 def trainer(train_loader, valid_loader, model, criterion,  optimizer_t, optimizer_s=None, lr_scheduler=None, stage=None):
     # Init Tensorboard writer
-    writer = SummaryWriter(os.path.join(args.save_dir, 'runs', args.experiment_name))
+    writer = SummaryWriter(os.path.join(args.tboard_dir, 'tboard_logs', args.experiment_name))
     logger.log("start training..." + stage)
     best_top1  = 0.0
     epochs     = args.baseline_epochs
@@ -124,7 +125,7 @@ def trainer(train_loader, valid_loader, model, criterion,  optimizer_t, optimize
         need_time = '[Need: {:02d}:{:02d}:{:02d}]'.format(need_hour, need_mins, need_secs)
         logger.log(' [{:s}] :: {:3d}/{:3d} ----- [{:s}] {:s} LR={:}'.format(
             args.smodel_name, epoch, epochs, time_string(), need_time, lr))
-        train(train_loader, model, criterion, optimizer_t, optimizer_s, epoch, stage, logger, writer, args)
+        loss_avg = train(train_loader, model, criterion, optimizer_t, optimizer_s, epoch, stage, logger, writer, args)
         global_step = (epoch + 1) * len(train_loader) - 1
         valid_top1 = valid(valid_loader, model, criterion, epoch,
                            global_step, stage=stage, logger=logger, tboard_writer=writer, args=args)
@@ -135,9 +136,16 @@ def trainer(train_loader, valid_loader, model, criterion,  optimizer_t, optimize
         else:
             is_best = False
             
-        if epoch % 5 == 0: # Checkpoint every 5 epochs
-            utils.save_checkpoint(model, logger.path('info'), 
-                                  is_best=is_best, pre = args.aim + "_" + "epoch_" + str(epoch) + "_" + stage)
+        # Checkpoint every epoch
+        utils.save_checkpoint(
+            model, 
+            optimizer_t, 
+            loss_avg, 
+            logger.path('ckpt'), 
+            epoch=epoch,
+            is_best=is_best, 
+            pre = args.aim + "_" + "epoch_" + str(epoch) + "_" + stage
+        )
   
         epoch_time.update(time.time() - start_time)
         start_time = time.time()

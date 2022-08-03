@@ -238,11 +238,18 @@ def train(data_loader, model, criterion, optimizer_t, optimizer_s, epoch, stage,
                         "Loss: {:.4f}, Loss_dis: {:.4f}, Prec@(cnn1, res1, cnn5, res5): {:.4%},{:.4%}, {:.4%}, {:.4%}".format(
                             epoch, epochs, step, len(data_loader), 
                             loss_avg.avg, mse_avg.avg, top1_cnn.avg, top1_res.avg, top5_cnn.avg, top5_res.avg))
+            tboard_writer.add_scalar("Training Top-1 Accuracy vs Step", top1_res.avg, global_step)
+            tboard_writer.add_scalar("Training Top-5 Accuracy vs Step", top5_res.avg, global_step)
             
         global_step += 1
+        # Log which step we are at 
+        tboard_writer.add_scalar("Epoch vs Step", global_step, epoch)
     logger.log("m is {}".format(m))
     logger.log("Train, Epoch: [{:3d}/{}], Final Prec: cnn, res@1: {:.4%}, {:.4%},  Final Prec: cnn, res@5: {:.4%}, {:.4%} Loss: {:.4f}".format(
                 epoch, epochs, top1_cnn.avg, top1_res.avg, top5_cnn.avg, top5_res.avg, loss_avg.avg))
+    tboard_writer.add_scalar("Training Top-1 Accuracy vs Epoch", top1_res.avg, epoch)
+    tboard_writer.add_scalar("Training Top-5 Accuracy vs Epoch", top5_res.avg, epoch)
+    return loss_avg.avg
 
 
 
@@ -318,6 +325,8 @@ def valid(data_loader, model, criterion, epoch, global_step, stage, logger, tboa
         logger.log("Valid, Epoch: [{:3d}/{}], Final Prec: cnn, res@1: {:.4%}, {:.4%},  Final Prec: cnn, res@5: {:.4%}, {:.4%} Loss: {:.4f}".format(
                     epoch, epochs, top1_cnn.avg, top1_res.avg, top5_cnn.avg, top5_res.avg, loss_avg.avg))
         
+        tboard_writer.add_scalar("Valid Top-1 Accuracy vs Epoch", top1_res.avg, epoch)
+        tboard_writer.add_scalar("Valid Top-5 Accuracy vs Epoch", top5_res.avg, epoch)
         if "RES" in stage:
             return top1_res.avg
         else:

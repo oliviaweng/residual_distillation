@@ -1,6 +1,8 @@
 import os, shutil, torch, copy, sys, PIL, math, random, time, pdb
 import torchvision.transforms as transforms
 import numpy                  as np
+from pathlib import Path
+import re
 
 def _data_transforms_cifar10(args):
     CIFAR_MEAN      = [0.49139968, 0.48215827, 0.44653124]
@@ -21,19 +23,42 @@ def _data_transforms_cifar10(args):
         ])
     return train_transform, valid_transform
 
-def save_checkpoint(model, save_dir, epoch=None, is_best=False, pre = None):
-    if epoch is not None:
-        ckpt = os.path.join(save_dir, "{}_checkpoint_{}.pth.tar".format(pre, epoch))
-    else:
-        ckpt = os.path.join(save_dir, "{}_checkpoint.pth.tar".format(pre))
-    # TODO: Save optimizer state too
+def save_checkpoint(model, optimizer, loss, save_dir, epoch=None, is_best=False, pre = None):
+
+    ckpt = os.path.join(save_dir, "{}_checkpoint_loss={:.4f}.pth.tar".format(pre, loss))
     torch.save({
             'epoch': epoch,
             'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'loss': loss,
             }, ckpt)
     if is_best:
         best_ckpt = os.path.join(save_dir, "{}_best.pth.tar".format(pre))
         shutil.copyfile(ckpt, best_ckpt)
+    # Only save the top 3 best models
+    save_top_k = 3 
+    checkpoints = list(Path(save_dir).rglob("*.pth.tar"))
+    best_k_models = {}
+    for checkpoint in checkpoints:
+        checkpoint = str(checkpoint)
+        index = checkpoint.find('=')
+        if index != -1:
+            index = index + len('=')
+            match = re.search('[A-z]', checkpoint[index:])
+            if match:
+                curr_ckpt_loss = checkpoint[index : index + match.start() - 1]
+                # -1 due to . in filename --------------------------------^^^
+                best_k_models[checkpoint] = float(curr_ckpt_loss)
+    if len(best_k_models) < 1:
+        return # No saved checkpoints yet
+    
+    best_k_models_sorted = sorted(best_k_models, key=best_k_models.get)
+    num_models_to_delete = len(best_k_models) - save_top_k
+    for _ in range(num_models_to_delete):
+        model_to_del = best_k_models_sorted.pop(-1)
+        best_k_models.pop(model_to_del)
+        os.remove(model_to_del)
+
         
 class AverageMeter(object):
   """Computes and stores the average and current value"""

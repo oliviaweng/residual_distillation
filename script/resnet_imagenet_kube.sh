@@ -1,6 +1,7 @@
 #!/bin/bash
 
 layer=$1
+en=$2
 dc=0.0
 procedure=RES_NMT
 wd=1e-4
@@ -11,6 +12,7 @@ aim=${tmodel_name}_${layer}_${procedure}
 echo "teacher_name:"${tmodel_name}
 echo "student_name:"${smodel_name}
 code_dir=/imagenet-volume/pytorch/python/src/residual_distillation
+tboard_dir=/imagenet-volume/imagenet-training/
 save_dir=/imagenet-volume/imagenet-training/${aim}/
 data_dir=/imagenet-volume/ILSVRC/Data/CLS-LOC/
 mode_dir=""
@@ -36,6 +38,8 @@ CUDA_VISIBLE_DEVICES=0 python3 ${code_dir}/train_dirac.py --stage RES_NMT \
                        --dis_weight 1e-4 \
                        --lr_sch imagenet \
                        --dc ${dc} \
+                       --tboard_dir ${tboard_dir} \
+                       --experiment_name ${en} \
                     #    --model_dir ${mode_dir} \
                        
                        
