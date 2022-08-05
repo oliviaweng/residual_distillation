@@ -1,7 +1,7 @@
 #!/bin/bash
 
 layer=$1
-en=resnet50_teacher_workers28
+en=resnet50_teacher
 batch_size=256
 dc=0.0
 procedure=RES_NMT
@@ -41,7 +41,7 @@ python3 ${code_dir}/train_dirac.py --stage RES_NMT \
                        --dc ${dc} \
                        --tboard_dir ${tboard_dir} \
                        --experiment_name ${en} \
-                       --num_workers 28
+                       --num_workers 24
                     #    --model_dir ${mode_dir} \
                        
                        
