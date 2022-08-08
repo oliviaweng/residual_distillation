@@ -32,6 +32,20 @@ def save_checkpoint(model, optimizer, loss, save_dir, epoch=None, is_best=False,
             'optimizer_state_dict': optimizer.state_dict(),
             'loss': loss,
             }, ckpt)
+    # Rename previous last checkpoint(s) for removal later
+    last_checkpoints = list(Path(save_dir).rglob("*last.pth.tar"))
+    for l in last_checkpoints:
+        l = str(l)
+        os.rename(l, l + '.old')
+    # Save last checkpoint
+    last_ckpt = os.path.join(save_dir, "{}_last.pth.tar".format(pre))
+    shutil.copyfile(ckpt, last_ckpt)
+    # Remove old last checkpoints
+    last_checkpoints = list(Path(save_dir).rglob("*last.pth.tar.old"))
+    for l in last_checkpoints:
+        print(f'Removing old last checkpoint: {l}')
+        os.remove(l)
+    # Save best model (according to highest validation acc)
     if is_best:
         best_ckpt = os.path.join(save_dir, "{}_best.pth.tar".format(pre))
         shutil.copyfile(ckpt, best_ckpt)

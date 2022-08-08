@@ -144,7 +144,7 @@ def trainer(train_loader, valid_loader, model, criterion,  optimizer_t, optimize
             logger.path('ckpt'), 
             epoch=epoch,
             is_best=is_best, 
-            pre = args.aim + "_" + "epoch_" + str(epoch) + "_" + stage
+            pre = args.aim + "_" + "epoch_" + str(epoch)
         )
   
         epoch_time.update(time.time() - start_time)
@@ -155,13 +155,15 @@ def trainer(train_loader, valid_loader, model, criterion,  optimizer_t, optimize
     writer.close()
 
     
-def train_nmt(train_loader, valid_loader, model, criterion, stage):
+def train_nmt(train_loader, valid_loader, model, criterion, stage, checkpoint=None):
  
     logger.log("*"*10 + "TRAIN NMT" + "*"*10)
     if "RES_NMT" in stage:
         
         optimizer = SGD(params=model.module.teacher.parameters(), lr=args.learning_rate, 
                     momentum=args.momentum, weight_decay=args.weight_decay, nesterov=True)
+        if checkpoint:
+            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         trainer(train_loader, valid_loader, model, criterion, optimizer, 
                 optimizer_s=None, lr_scheduler = None, stage=stage)
         
@@ -261,36 +263,25 @@ def main(**kwargs):
                          kd_type=args.kd_type,
                          num_classes=num_classes,
                          logger=logger)
-    '''
-    model = Distiller2(  student=model_dict[args.smodel_name], 
-                         teacher=model_dict[args.tmodel_name], 
-                         config_t=args.config_t, 
-                         config_s=args.config_s,
-                         kd_type=args.kd_type,
-                         num_classes=num_classes,
-                         logger=logger)
-    '''
-    #prepare_seed(args.seed)
-    
-    if args.model_dir and "JOINT" not in args.procedure:
-        pretrained_dict = torch.load(args.model_dir)["model_state_dict"]
-        pretrained_dict = {k[7:].replace("stages", "layers"):v for k,v in pretrained_dict.items() if "margin" not in k}
-        model_state_dict = model.state_dict()
-        for i, (k, v) in enumerate(pretrained_dict.items()):
-            ###old model modified
-            if "teacher.bn" in k:
-                k = "teacher.conv1.1." + k.split(".")[-1]
-            if "teacher.conv1.weight" in k:
-                k = "teacher.conv1.0.weight"
-            #####################
-            if "teacher" in k:
-                model_state_dict[k] = v
 
-        model.load_state_dict(model_state_dict, strict = True)
-        model.reset_margin()
-        model = torch.nn.DataParallel(model).cuda()
-    else:
-        model = torch.nn.DataParallel(model).cuda()
+    model = torch.nn.DataParallel(model).cuda()
+    # If there exist any last checkpoints, resume from there.
+    checkpoint = None
+    model_last_checkpoints = list(Path(logger.path('ckpt')).rglob("*last.pth.tar"))
+    print(f"Resuming from checkpoint: {model_last_checkpoints[0]}")
+    if model_last_checkpoints:
+        # There should only be one last checkpoint ----v
+        checkpoint = torch.load(model_last_checkpoints[0])
+        args.start_epoch = checkpoint['epoch']
+
+        pretrained_dict = checkpoint["model_state_dict"]
+        pretrained_dict.pop('module.margin1', None) # TODO: Who knows what this is.
+        # print(f"Saved model state dict: {pretrained_dict.keys()}")
+        model_state_dict = model.state_dict()
+        # print(f"Current model state dict: {model_state_dict.keys()}")
+        model.load_state_dict(pretrained_dict, strict=True)
+        # model.reset_margin()
+
     model.module.reset_margin()
     #valid(valid_loader, model, criterion, 0, global_step=0, stage=args.stage, logger=logger, args=args)
 
@@ -303,7 +294,14 @@ def main(**kwargs):
     logger.log('valid_data : {:}'.format(valid_loader.dataset))
 
     if "RES_NMT" in args.procedure or "RES_KD" in args.procedure or "CNN_NMT" in args.procedure:
-        train_nmt(train_loader, valid_loader, model, criterion, stage = args.procedure[0])
+        train_nmt(
+            train_loader, 
+            valid_loader, 
+            model, 
+            criterion, 
+            stage=args.procedure[0], 
+            checkpoint=checkpoint
+        )
         
     if "TA" in args.procedure or "JOINT" in args.procedure or "KD" in args.procedure or "KL" in args.procedure:
         Ta1(train_loader, valid_loader, model, criterion, stage = args.procedure[0])

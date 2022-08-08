@@ -1,7 +1,7 @@
 #!/bin/bash
 
 layer=$1
-en=resnet50_teacher
+en=resnet50_teacher_workers24
 batch_size=256
 dc=0.0
 procedure=RES_NMT
