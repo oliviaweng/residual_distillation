@@ -164,6 +164,10 @@ def train_nmt(train_loader, valid_loader, model, criterion, stage, checkpoint=No
                     momentum=args.momentum, weight_decay=args.weight_decay, nesterov=True)
         if checkpoint:
             optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            for state in optimizer.state.values():
+                for k, v in state.items():
+                    if torch.is_tensor(v):
+                        state[k] = v.cuda()
         trainer(train_loader, valid_loader, model, criterion, optimizer, 
                 optimizer_s=None, lr_scheduler = None, stage=stage)
         
@@ -276,11 +280,7 @@ def main(**kwargs):
 
         pretrained_dict = checkpoint["model_state_dict"]
         pretrained_dict.pop('module.margin1', None) # TODO: Who knows what this is.
-        # print(f"Saved model state dict: {pretrained_dict.keys()}")
-        # model_state_dict = model.state_dict()
-        # print(f"Current model state dict: {model_state_dict.keys()}")
         model.load_state_dict(pretrained_dict, strict=True)
-        # model.reset_margin()
     model = model.cuda()
 
     model.module.reset_margin()
