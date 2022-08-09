@@ -276,7 +276,9 @@ def main(**kwargs):
     if model_last_checkpoints:
         # There should only be one last checkpoint ----v
         checkpoint = torch.load(model_last_checkpoints[0], map_location='cpu')
-        args.start_epoch = checkpoint['epoch']
+        args.start_epoch = checkpoint['epoch'] + 1 
+        # ------------------------------------ ^^^
+        # | Start training at next epoch after checkpoint
 
         pretrained_dict = checkpoint["model_state_dict"]
         pretrained_dict.pop('module.margin1', None) # TODO: Who knows what this is.
