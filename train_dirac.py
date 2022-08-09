@@ -264,23 +264,24 @@ def main(**kwargs):
                          num_classes=num_classes,
                          logger=logger)
 
-    model = torch.nn.DataParallel(model).cuda()
+    model = torch.nn.DataParallel(model)
     # If there exist any last checkpoints, resume from there.
     checkpoint = None
     model_last_checkpoints = list(Path(logger.path('ckpt')).rglob("*last.pth.tar"))
     print(f"Resuming from checkpoint: {model_last_checkpoints[0]}")
     if model_last_checkpoints:
         # There should only be one last checkpoint ----v
-        checkpoint = torch.load(model_last_checkpoints[0])
+        checkpoint = torch.load(model_last_checkpoints[0], map_location='cpu')
         args.start_epoch = checkpoint['epoch']
 
         pretrained_dict = checkpoint["model_state_dict"]
         pretrained_dict.pop('module.margin1', None) # TODO: Who knows what this is.
         # print(f"Saved model state dict: {pretrained_dict.keys()}")
-        model_state_dict = model.state_dict()
+        # model_state_dict = model.state_dict()
         # print(f"Current model state dict: {model_state_dict.keys()}")
         model.load_state_dict(pretrained_dict, strict=True)
         # model.reset_margin()
+    model = model.cuda()
 
     model.module.reset_margin()
     #valid(valid_loader, model, criterion, 0, global_step=0, stage=args.stage, logger=logger, args=args)
