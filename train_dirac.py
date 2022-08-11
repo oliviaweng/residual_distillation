@@ -234,10 +234,10 @@ def main(**kwargs):
             validation = True, auto_aug  = False)
 
         train_loader = torch.utils.data.DataLoader(dataset = train_data, batch_size = args.batch_size,
-            shuffle = True, num_workers= args.num_workers, pin_memory = True)
+            shuffle = True, num_workers= args.num_workers, pin_memory = False)
 
         valid_loader = torch.utils.data.DataLoader(dataset = valid_data, batch_size = args.batch_size,
-            shuffle = False, num_workers= args.num_workers, pin_memory = True)
+            shuffle = False, num_workers= args.num_workers, pin_memory = False)
         
     elif args.dataset == "imagenet":
         num_classes = 1000
