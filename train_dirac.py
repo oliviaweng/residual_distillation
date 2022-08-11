@@ -250,12 +250,12 @@ def main(**kwargs):
                 transforms.RandomResizedCrop(224), transforms.RandomHorizontalFlip(), transforms.ToTensor(), normalize,]))
     
         train_loader = torch.utils.data.DataLoader(
-             train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=False, sampler=None)
+             train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True, sampler=None)
     
         valid_loader = torch.utils.data.DataLoader(
             datasets.ImageFolder(valdir, transforms.Compose([
                 transforms.Resize(256), transforms.CenterCrop(224), transforms.ToTensor(), normalize])),
-            batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers, pin_memory=False)
+            batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers, pin_memory=True)
     ##################################################################################
     
     criterion  = nn.CrossEntropyLoss().cuda()
